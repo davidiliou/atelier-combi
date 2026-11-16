@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getCombination, updateCombination } from '../api/combinations'
 import { RugbyField } from '../field/RugbyField'
@@ -9,6 +9,60 @@ import type { Actor, Combination, FieldConfig, Position, Step } from '../types'
 
 function uid(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+function readCollapsed(storageKey: string) {
+  try {
+    return localStorage.getItem(storageKey) === '1'
+  } catch {
+    return false
+  }
+}
+
+function CollapsibleSection({
+  title,
+  storageKey,
+  children,
+}: {
+  title: string
+  storageKey: string
+  children: ReactNode
+}) {
+  const [collapsed, setCollapsed] = useState(() => readCollapsed(storageKey))
+
+  function toggle() {
+    setCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(storageKey, next ? '1' : '0')
+      } catch {
+        /* localStorage indisponible */
+      }
+      return next
+    })
+  }
+
+  return (
+    <section className={collapsed ? 'is-collapsed' : undefined}>
+      <h3>
+        <button
+          type="button"
+          className="section-toggle"
+          aria-expanded={!collapsed}
+          aria-controls={storageKey}
+          onClick={toggle}
+        >
+          <span>{title}</span>
+          <span className="chevron" aria-hidden="true" />
+        </button>
+      </h3>
+      {!collapsed && (
+        <div className="section-body" id={storageKey}>
+          {children}
+        </div>
+      )}
+    </section>
+  )
 }
 
 export function CombinationEditor() {
@@ -304,8 +358,7 @@ export function CombinationEditor() {
 
       <div className="editor-layout">
         <aside className="side-panel">
-          <section>
-            <h3>Terrain</h3>
+          <CollapsibleSection title="Terrain" storageKey="atelier-combi-panel-terrain">
             <label className="field-row">
               Mode
               <select
@@ -351,10 +404,9 @@ export function CombinationEditor() {
               />
               Grille 5 m
             </label>
-          </section>
+          </CollapsibleSection>
 
-          <section>
-            <h3>Acteurs</h3>
+          <CollapsibleSection title="Acteurs" storageKey="atelier-combi-panel-acteurs">
             <div className="actor-buttons">
               <button type="button" onClick={() => addActor('player')}>
                 + Joueur
@@ -385,18 +437,7 @@ export function CombinationEditor() {
             ) : (
               <p className="muted">Sélectionnez un pion sur le terrain.</p>
             )}
-          </section>
-
-          <StepTimeline
-            steps={combi.steps}
-            currentStepIndex={currentStepIndex}
-            onSelect={setCurrentStepIndex}
-            onAdd={addStep}
-            onDuplicate={duplicateStep}
-            onDelete={deleteStep}
-            onReorder={reorderSteps}
-            onDurationChange={changeDuration}
-          />
+          </CollapsibleSection>
         </aside>
 
         <main className="field-panel">
@@ -433,14 +474,27 @@ export function CombinationEditor() {
             </div>
           </div>
 
-          <RugbyField
-            field={combi.field}
-            actors={combi.actors}
-            positions={playing ? previewPositions : currentStep.positions}
-            selectedActorId={selectedActorId}
-            onSelectActor={setSelectedActorId}
-            onMoveActor={updateStepPositions}
-          />
+          <div className="field-stage">
+            <RugbyField
+              field={combi.field}
+              actors={combi.actors}
+              positions={playing ? previewPositions : currentStep.positions}
+              selectedActorId={selectedActorId}
+              onSelectActor={setSelectedActorId}
+              onMoveActor={updateStepPositions}
+            />
+
+            <StepTimeline
+              steps={combi.steps}
+              currentStepIndex={currentStepIndex}
+              onSelect={setCurrentStepIndex}
+              onAdd={addStep}
+              onDuplicate={duplicateStep}
+              onDelete={deleteStep}
+              onReorder={reorderSteps}
+              onDurationChange={changeDuration}
+            />
+          </div>
 
           <div className="preview-block">
             <h3>Aperçu canvas (export)</h3>
