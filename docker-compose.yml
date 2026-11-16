@@ -1,0 +1,16 @@
+services:
+  atelier-combi:
+    build: .
+    image: atelier-combi:latest
+    container_name: atelier-combi
+    ports:
+      - "8087:8087"
+    volumes:
+      - atelier-combi-data:/app/data
+    environment:
+      NODE_ENV: production
+      PORT: "8087"
+    restart: unless-stopped
+
+volumes:
+  atelier-combi-data:
