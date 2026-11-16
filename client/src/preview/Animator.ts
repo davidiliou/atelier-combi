@@ -88,20 +88,34 @@ export function drawScene(
     }
   }
 
-  const lines = pitchMarkings(field)
-  for (const l of lines) {
+  const markings = pitchMarkings(field)
+  for (const l of markings.lines) {
     const a = metersToPixels({ x: l.x1, y: l.y1 }, field, view)
     const b = metersToPixels({ x: l.x2, y: l.y2 }, field, view)
     ctx.beginPath()
     ctx.moveTo(a.x, a.y)
     ctx.lineTo(b.x, b.y)
-    ctx.strokeStyle = l.dashed ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.85)'
-    ctx.lineWidth = l.dashed ? 1.5 : 2.5
-    if (l.dashed) ctx.setLineDash([6, 6])
-    else ctx.setLineDash([])
+    ctx.strokeStyle = l.dashed ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.92)'
+    ctx.lineWidth = l.goal ? 3.5 : l.dashed ? 1.5 : 2.5
+    ctx.setLineDash(l.dashed ? [7, 6] : [])
     ctx.stroke()
   }
   ctx.setLineDash([])
+
+  const fontSize = Math.max(13, view.width * 0.022)
+  ctx.font = `700 ${fontSize}px Source Sans 3, sans-serif`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  for (const label of markings.labels) {
+    const px = metersToPixels(label, field, view)
+    const chipW = fontSize * 1.7
+    const chipH = fontSize * 1.25
+    ctx.fillStyle = 'rgba(8, 28, 14, 0.82)'
+    roundRect(ctx, px.x - chipW / 2, px.y - chipH / 2, chipW, chipH, 4)
+    ctx.fill()
+    ctx.fillStyle = '#fff'
+    ctx.fillText(label.text, px.x, px.y)
+  }
 
   for (const actor of actors) {
     const pos = positions[actor.id]

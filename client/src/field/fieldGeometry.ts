@@ -6,11 +6,16 @@ export type ViewBox = {
   padding: number
 }
 
+/** Metres the goal uprights extend behind the try line, into the margin. */
+const GOAL_POST_OUT_M = 2.6
+
 export function getViewBox(field: FieldConfig, pixelWidth: number): ViewBox {
   const aspect = field.widthM / field.heightM
   const width = pixelWidth
   const height = width / aspect
-  return { width, height, padding: 16 }
+  const padding =
+    field.mode === 'zone' ? 16 : Math.max(28, (GOAL_POST_OUT_M * width) / field.widthM + 10)
+  return { width, height, padding }
 }
 
 export function metersToPixels(
@@ -41,31 +46,102 @@ export function pixelsToMeters(
   }
 }
 
-/** Draw rugby pitch markings in meters space (caller transforms) */
-export function pitchMarkings(field: FieldConfig): Array<{ x1: number; y1: number; x2: number; y2: number; dashed?: boolean }> {
-  const lines: Array<{ x1: number; y1: number; x2: number; y2: number; dashed?: boolean }> = []
-  const { widthM, heightM, mode } = field
+export type PitchLine = {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  dashed?: boolean
+  /** Goal uprights and crossbar, drawn a little heavier. */
+  goal?: boolean
+}
 
-  // Outer boundary always present
-  // Horizontal lines (across width) at key depths when mode=full
-  if (mode === 'full') {
-    const candidates = [0, 5, 22, 40, 50, heightM - 22, heightM - 5, heightM]
-    const unique = [...new Set(candidates.filter((y) => y >= 0 && y <= heightM))]
-    for (const y of unique) {
-      lines.push({ x1: 0, y1: y, x2: widthM, y2: y, dashed: y !== 0 && y !== heightM && y !== 22 && y !== heightM - 22 })
+export type PitchLabel = {
+  x: number
+  y: number
+  text: string
+}
+
+export type PitchMarkings = {
+  lines: PitchLine[]
+  labels: PitchLabel[]
+}
+
+const POST_GAP_M = 5.6
+const POST_IN_M = 1.3
+
+/**
+ * Pitch markings in metres.
+ * Origin: x = 0 on the left touchline, y = 0 on the near try line.
+ * Half pitch (`full`) is 50 m deep; full pitch (`complete`) is 100 m, mirrored.
+ */
+export function pitchMarkings(field: FieldConfig): PitchMarkings {
+  const { widthM, heightM, mode } = field
+  const lines: PitchLine[] = [
+    { x1: 0, y1: 0, x2: widthM, y2: 0 },
+    { x1: 0, y1: heightM, x2: widthM, y2: heightM },
+    { x1: 0, y1: 0, x2: 0, y2: heightM },
+    { x1: widthM, y1: 0, x2: widthM, y2: heightM },
+  ]
+  const labels: PitchLabel[] = []
+
+  if (mode === 'zone') return { lines, labels }
+
+  const marks = new Map<string, { y: number; dashed: boolean; label?: string }>()
+  const addMark = (y: number, dashed: boolean, label?: string) => {
+    if (y < -0.05 || y > heightM + 0.05) return
+    const key = y.toFixed(2)
+    const prev = marks.get(key)
+    if (!prev) {
+      marks.set(key, { y, dashed, label })
+      return
     }
-    // Halfway suggestion if height covers it
-    if (heightM >= 50) {
-      lines.push({ x1: 0, y1: heightM / 2, x2: widthM, y2: heightM / 2 })
-    }
-  } else {
-    lines.push({ x1: 0, y1: 0, x2: widthM, y2: 0 })
-    lines.push({ x1: 0, y1: heightM, x2: widthM, y2: heightM })
+    marks.set(key, {
+      y,
+      dashed: prev.dashed && dashed,
+      label: prev.label ?? label,
+    })
   }
 
-  // Touchlines
-  lines.push({ x1: 0, y1: 0, x2: 0, y2: heightM })
-  lines.push({ x1: widthM, y1: 0, x2: widthM, y2: heightM })
+  const fromTryLine = (origin: number, direction: 1 | -1) => {
+    addMark(origin + direction * 5, true)
+    addMark(origin + direction * 22, false)
+    addMark(origin + direction * 40, true)
+  }
 
-  return lines
+  fromTryLine(0, 1)
+  if (mode === 'complete') fromTryLine(heightM, -1)
+  addMark(50, false, '50')
+
+  for (const mark of marks.values()) {
+    const onEdge = mark.y <= 0.05 || mark.y >= heightM - 0.05
+    if (!onEdge) {
+      lines.push({ x1: 0, y1: mark.y, x2: widthM, y2: mark.y, dashed: mark.dashed })
+    }
+    if (mark.label) labels.push({ x: widthM / 2, y: mark.y, text: mark.label })
+  }
+
+  // 5 m and 15 m from each touchline, parallel to them.
+  for (const x of [5, 15, widthM - 15, widthM - 5]) {
+    if (x > 0.4 && x < widthM - 0.4) {
+      lines.push({ x1: x, y1: 0, x2: x, y2: heightM, dashed: true })
+    }
+  }
+
+  addGoalPosts(lines, widthM, 0, 1)
+  if (mode === 'complete') addGoalPosts(lines, widthM, heightM, -1)
+
+  return { lines, labels }
+}
+
+function addGoalPosts(lines: PitchLine[], widthM: number, tryY: number, inward: 1 | -1) {
+  const left = widthM / 2 - POST_GAP_M / 2
+  const right = widthM / 2 + POST_GAP_M / 2
+  const yOut = tryY - inward * GOAL_POST_OUT_M
+  const yIn = tryY + inward * POST_IN_M
+  lines.push(
+    { x1: left, y1: yOut, x2: left, y2: yIn, goal: true },
+    { x1: right, y1: yOut, x2: right, y2: yIn, goal: true },
+    { x1: left, y1: tryY, x2: right, y2: tryY, goal: true },
+  )
 }

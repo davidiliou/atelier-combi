@@ -10,8 +10,11 @@ export type Actor = {
 export type Position = { x: number; y: number }
 
 export type FieldConfig = {
-  mode: 'full' | 'zone'
+  /** `full` = demi-terrain (50 m), `complete` = terrain complet (100 m), `zone` = extrait. */
+  mode: 'full' | 'complete' | 'zone'
+  /** Largeur entre les lignes de touche, en mètres. Terrain réglementaire : 70. */
   widthM: number
+  /** Profondeur depuis la ligne d’en-but proche, en mètres. Demi = 50, complet = 100. */
   heightM: number
   showGrid?: boolean
 }

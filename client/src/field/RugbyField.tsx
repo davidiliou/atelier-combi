@@ -23,7 +23,7 @@ export function RugbyField({
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
   const view = useMemo(() => getViewBox(field, width), [field, width])
-  const lines = useMemo(() => pitchMarkings(field), [field])
+  const markings = useMemo(() => pitchMarkings(field), [field])
   const [dragging, setDragging] = useState<string | null>(null)
 
   function clientToSvg(clientX: number, clientY: number) {
@@ -115,7 +115,7 @@ export function RugbyField({
         )
       })}
 
-      {lines.map((l, i) => {
+      {markings.lines.map((l, i) => {
         const a = metersToPixels({ x: l.x1, y: l.y1 }, field, view)
         const b = metersToPixels({ x: l.x2, y: l.y2 }, field, view)
         return (
@@ -125,10 +125,40 @@ export function RugbyField({
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke={l.dashed ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.85)'}
-            strokeWidth={l.dashed ? 1.5 : 2.5}
-            strokeDasharray={l.dashed ? '6 6' : undefined}
+            stroke={l.dashed ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.92)'}
+            strokeWidth={l.goal ? 3.5 : l.dashed ? 1.5 : 2.5}
+            strokeDasharray={l.dashed ? '7 6' : undefined}
+            strokeLinecap="butt"
           />
+        )
+      })}
+
+      {markings.labels.map((label) => {
+        const px = metersToPixels(label, field, view)
+        const fontSize = Math.max(13, view.width * 0.022)
+        const chipW = fontSize * 1.7
+        const chipH = fontSize * 1.25
+        return (
+          <g key={label.text} transform={`translate(${px.x}, ${px.y})`}>
+            <rect
+              x={-chipW / 2}
+              y={-chipH / 2}
+              width={chipW}
+              height={chipH}
+              rx={4}
+              fill="rgba(8, 28, 14, 0.82)"
+            />
+            <text
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="#fff"
+              fontSize={fontSize}
+              fontWeight={700}
+              fontFamily="Source Sans 3, sans-serif"
+            >
+              {label.text}
+            </text>
+          </g>
         )
       })}
 

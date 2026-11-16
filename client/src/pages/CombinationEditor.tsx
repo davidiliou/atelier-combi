@@ -11,6 +11,21 @@ function uid(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`
 }
 
+function clampSteps(steps: Step[], widthM: number, heightM: number): Step[] {
+  return steps.map((step) => ({
+    ...step,
+    positions: Object.fromEntries(
+      Object.entries(step.positions).map(([id, pos]) => [
+        id,
+        {
+          x: Math.min(widthM, Math.max(0, pos.x)),
+          y: Math.min(heightM, Math.max(0, pos.y)),
+        },
+      ]),
+    ),
+  }))
+}
+
 function readCollapsed(storageKey: string) {
   try {
     return localStorage.getItem(storageKey) === '1'
@@ -157,9 +172,13 @@ export function CombinationEditor() {
     update({ steps })
   }
 
-  function updateField(patch: Partial<FieldConfig>) {
+  function updateField(patch: Partial<FieldConfig>, options?: { clamp?: boolean }) {
     if (!combi) return
-    update({ field: { ...combi.field, ...patch } })
+    const field = { ...combi.field, ...patch }
+    update({
+      field,
+      steps: options?.clamp ? clampSteps(combi.steps, field.widthM, field.heightM) : combi.steps,
+    })
   }
 
   function addActor(kind: Actor['kind']) {
@@ -365,14 +384,13 @@ export function CombinationEditor() {
                 value={combi.field.mode}
                 onChange={(e) => {
                   const mode = e.target.value as FieldConfig['mode']
-                  if (mode === 'full') {
-                    updateField({ mode, widthM: 70, heightM: 50 })
-                  } else {
-                    updateField({ mode, widthM: 20, heightM: 15 })
-                  }
+                  if (mode === 'complete') updateField({ mode, widthM: 70, heightM: 100 }, { clamp: true })
+                  else if (mode === 'zone') updateField({ mode, widthM: 20, heightM: 15 }, { clamp: true })
+                  else updateField({ mode, widthM: 70, heightM: 50 }, { clamp: true })
                 }}
               >
                 <option value="full">Demi-terrain</option>
+                <option value="complete">Terrain complet</option>
                 <option value="zone">Zone</option>
               </select>
             </label>

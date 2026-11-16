@@ -10,10 +10,11 @@ export type Actor = {
 export type Position = { x: number; y: number }
 
 export type FieldConfig = {
-  mode: 'full' | 'zone'
-  /** For full: half or full pitch width in meters along X (touchline). Default half = 50 */
+  /** `full` = half pitch (50 m), `complete` = full pitch (100 m), `zone` = small excerpt. */
+  mode: 'full' | 'complete' | 'zone'
+  /** Width between touchlines, in metres. Regulation pitch: 70. */
   widthM: number
-  /** Depth in meters along Y (goal line direction). Default half = 70 (22+22+in-goal approx) or full 100 */
+  /** Depth from the near try line, in metres. Half = 50, full = 100. */
   heightM: number
   showGrid?: boolean
 }
