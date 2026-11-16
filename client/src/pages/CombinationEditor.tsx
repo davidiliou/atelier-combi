@@ -475,30 +475,34 @@ export function CombinationEditor() {
           </div>
 
           <div className="field-stage">
-            <RugbyField
-              field={combi.field}
-              actors={combi.actors}
-              positions={playing ? previewPositions : currentStep.positions}
-              selectedActorId={selectedActorId}
-              onSelectActor={setSelectedActorId}
-              onMoveActor={updateStepPositions}
-            />
+            <div className="field-column">
+              <RugbyField
+                field={combi.field}
+                actors={combi.actors}
+                positions={playing ? previewPositions : currentStep.positions}
+                selectedActorId={selectedActorId}
+                onSelectActor={setSelectedActorId}
+                onMoveActor={updateStepPositions}
+              />
 
-            <StepTimeline
-              steps={combi.steps}
-              currentStepIndex={currentStepIndex}
-              onSelect={setCurrentStepIndex}
-              onAdd={addStep}
-              onDuplicate={duplicateStep}
-              onDelete={deleteStep}
-              onReorder={reorderSteps}
-              onDurationChange={changeDuration}
-            />
-          </div>
+              <div className="preview-block">
+                <h3>Aperçu canvas (export)</h3>
+                <canvas ref={previewRef} className="preview-canvas" />
+              </div>
+            </div>
 
-          <div className="preview-block">
-            <h3>Aperçu canvas (export)</h3>
-            <canvas ref={previewRef} className="preview-canvas" />
+            <div className="steps-column">
+              <StepTimeline
+                steps={combi.steps}
+                currentStepIndex={currentStepIndex}
+                onSelect={setCurrentStepIndex}
+                onAdd={addStep}
+                onDuplicate={duplicateStep}
+                onDelete={deleteStep}
+                onReorder={reorderSteps}
+                onDurationChange={changeDuration}
+              />
+            </div>
           </div>
         </main>
       </div>
