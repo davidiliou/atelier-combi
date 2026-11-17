@@ -38,6 +38,10 @@ export function updateCombination(
   })
 }
 
+export function duplicateCombination(id: string) {
+  return request<Combination>(`/api/combinations/${id}/duplicate`, { method: 'POST' })
+}
+
 export function deleteCombination(id: string) {
   return request<void>(`/api/combinations/${id}`, { method: 'DELETE' })
 }

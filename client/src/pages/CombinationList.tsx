@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { createCombination, deleteCombination, listCombinations } from '../api/combinations'
+import {
+  createCombination,
+  deleteCombination,
+  duplicateCombination,
+  listCombinations,
+} from '../api/combinations'
 import type { CombinationSummary } from '../types'
 
 export function CombinationList() {
   const [items, setItems] = useState<CombinationSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null)
   const navigate = useNavigate()
 
   async function refresh() {
@@ -28,6 +34,19 @@ export function CombinationList() {
   async function handleCreate() {
     const created = await createCombination()
     navigate(`/combinations/${created.id}`)
+  }
+
+  async function handleDuplicate(id: string) {
+    setDuplicatingId(id)
+    setError(null)
+    try {
+      await duplicateCombination(id)
+      await refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Duplication impossible')
+    } finally {
+      setDuplicatingId(null)
+    }
   }
 
   async function handleDelete(id: string, title: string) {
@@ -76,13 +95,22 @@ export function CombinationList() {
                 {new Date(item.updatedAt).toLocaleString('fr-FR')}
               </time>
             </Link>
-            <button
-              type="button"
-              className="danger ghost"
-              onClick={() => void handleDelete(item.id, item.title)}
-            >
-              Supprimer
-            </button>
+            <div className="combi-actions">
+              <button
+                type="button"
+                disabled={duplicatingId === item.id}
+                onClick={() => void handleDuplicate(item.id)}
+              >
+                {duplicatingId === item.id ? 'Copie…' : 'Dupliquer'}
+              </button>
+              <button
+                type="button"
+                className="danger ghost"
+                onClick={() => void handleDelete(item.id, item.title)}
+              >
+                Supprimer
+              </button>
+            </div>
           </li>
         ))}
       </ul>

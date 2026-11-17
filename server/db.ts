@@ -156,6 +156,34 @@ export function updateCombination(
   return updated
 }
 
+export function duplicateCombination(id: string): Combination | null {
+  const existing = getCombination(id)
+  if (!existing) return null
+
+  const newId = randomUUID()
+  const now = new Date().toISOString()
+  const title = `${existing.title} (copie)`
+  const payload = {
+    field: structuredClone(existing.field),
+    actors: structuredClone(existing.actors),
+    steps: structuredClone(existing.steps),
+  }
+
+  db.prepare(
+    `INSERT INTO combinations (id, title, description, data, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  ).run(newId, title, existing.description, JSON.stringify(payload), now, now)
+
+  return {
+    id: newId,
+    title,
+    description: existing.description,
+    ...payload,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
 export function deleteCombination(id: string): boolean {
   const result = db.prepare(`DELETE FROM combinations WHERE id = ?`).run(id)
   return Number(result.changes) > 0

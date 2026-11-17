@@ -180,6 +180,12 @@ h3 {
   align-items: center;
 }
 
+.combi-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .combi-card {
   display: flex;
   justify-content: space-between;

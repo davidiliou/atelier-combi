@@ -2,6 +2,7 @@ import { Router } from 'express'
 import {
   createCombination,
   deleteCombination,
+  duplicateCombination,
   getCombination,
   listCombinations,
   updateCombination,
@@ -17,6 +18,15 @@ combinationsRouter.post('/', (req, res) => {
   const title = typeof req.body?.title === 'string' ? req.body.title : undefined
   const created = createCombination(title)
   res.status(201).json(created)
+})
+
+combinationsRouter.post('/:id/duplicate', (req, res) => {
+  const copy = duplicateCombination(req.params.id)
+  if (!copy) {
+    res.status(404).json({ error: 'Combinaison introuvable' })
+    return
+  }
+  res.status(201).json(copy)
 })
 
 combinationsRouter.get('/:id', (req, res) => {
