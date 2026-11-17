@@ -458,6 +458,78 @@ h3 {
     scrollbar-width: thin;
     scrollbar-color: rgba(232, 184, 74, 0.45) transparent;
   }
+
+  .steps-column .timeline {
+    padding: 0.45rem 0.5rem;
+  }
+
+  .steps-column .timeline-header {
+    gap: 0.3rem;
+  }
+
+  .steps-column .timeline-header h3 {
+    margin: 0;
+    font-size: 0.75rem;
+  }
+
+  .steps-column .timeline-actions {
+    gap: 0.2rem;
+  }
+
+  .steps-column .timeline-actions button {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.68rem;
+    line-height: 1.2;
+    border-radius: 6px;
+  }
+
+  .steps-column .timeline-list {
+    margin-top: 0.35rem;
+    gap: 0.2rem;
+    align-content: start;
+  }
+
+  .steps-column .timeline-list li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.25rem;
+    padding: 0.1rem 0.2rem;
+    border-radius: 6px;
+  }
+
+  .steps-column .step-chip {
+    min-width: 1.5rem;
+    padding: 0.05rem 0.32rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    border-radius: 5px;
+  }
+
+  .steps-column .duration-field {
+    flex-wrap: nowrap;
+    gap: 0.15rem;
+    font-size: 0.68rem;
+    min-width: 0;
+  }
+
+  .steps-column .duration-field input {
+    width: 3.3rem;
+    padding: 0.05rem 0.2rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    border-radius: 4px;
+  }
+
+  .steps-column .reorder {
+    flex-direction: row;
+    gap: 0.12rem;
+  }
+
+  .steps-column .reorder button {
+    padding: 0.02rem 0.28rem;
+    font-size: 0.68rem;
+    line-height: 1.1;
+    border-radius: 4px;
+  }
 }
 
 .field-toolbar {
